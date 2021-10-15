@@ -9,8 +9,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace AA.Presentation
 {
@@ -25,11 +27,17 @@ namespace AA.Presentation
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication("CookieAuth")
+                .AddCookie("CookieAuth", config =>
+                {
+                    config.Cookie.Name = "Tests.Cookie";
+                    config.LoginPath = new PathString("/Home/Authenticate");
+                });
 
-            services.AddControllers();
+            services.AddControllersWithViews();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthFromScratch", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo {Title = "AuthFromScratch", Version = "v1"});
             });
         }
 
@@ -46,12 +54,11 @@ namespace AA.Presentation
 
             app.UseRouting();
 
+            app.UseAuthentication();
+            
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }

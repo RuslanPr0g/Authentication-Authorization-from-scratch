@@ -1,7 +1,9 @@
 ﻿using IdentityExample.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using NETCore.MailKit.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,15 +23,18 @@ namespace IdentityExample.Controllers
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IEmailService _emailService;
 
         public WeatherForecastController(ILogger<WeatherForecastController> logger,
-            UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+            UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IEmailService emailService)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailService = emailService;
         }
 
+        [Authorize]
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
@@ -78,6 +83,10 @@ namespace IdentityExample.Controllers
 
             if (result.Succeeded)
             {
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                await _emailService.SendAsync("test@test.com", "Email verification", "_LINK_TO_VERIFY_EMAIL_");
+
                 return Ok(new
                 {
                     Result = result,
@@ -90,6 +99,21 @@ namespace IdentityExample.Controllers
                     Result = result,
                     UserCreated = user,
                 });
+        }
+
+        [HttpGet("email-verification")]
+        public async Task<IActionResult> EmailVerification(string userId, string code)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null) return BadRequest();
+
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+
+            if (result.Succeeded)
+                return Ok("Verificaiton has been sent to your email address!");
+
+            return NoContent();
         }
 
         [HttpPost("logout")]

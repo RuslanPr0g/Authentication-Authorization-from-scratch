@@ -1,4 +1,5 @@
 using IdentityExample.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -15,6 +16,7 @@ using NETCore.MailKit.Infrastructure.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace IdentityExample
@@ -46,6 +48,18 @@ namespace IdentityExample
             {
                 config.Cookie.Name = "Identity.Cookie";
                 config.LoginPath = "/weather/login";
+            });
+
+            services.AddAuthorization(config =>
+            {
+                // The following happens under the hood by the default contructors
+                //var defaultAuthBuilder = new AuthorizationPolicyBuilder();
+                //var defaultAuthPolicy = defaultAuthBuilder
+                //.RequireAuthenticatedUser()
+                //.RequireClaim(ClaimTypes.DateOfBirth)
+                //.Build();
+
+                //config.DefaultPolicy = defaultAuthPolicy;
             });
 
             services.AddMailKit(config => config.UseMailKit(Configuration.GetSection("Email").Get<MailKitOptions>()));

@@ -15,10 +15,29 @@ namespace AA.Presentation.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IAuthorizationService _authorizationService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IAuthorizationService authorizationService)
         {
             _logger = logger;
+            _authorizationService = authorizationService;
+        }
+
+        public async Task<IActionResult> DoStuff()
+        {
+            // doing smth
+
+            var builder = new AuthorizationPolicyBuilder("Schema");
+            var customPolicy = builder.RequireClaim("Hello").Build();
+
+            var authresult = await _authorizationService.AuthorizeAsync(User, "Claim.DoB");
+
+            if (authresult.Succeeded)
+            {
+                // do smth more
+            }
+
+            return Index();
         }
 
         public IActionResult Index()
